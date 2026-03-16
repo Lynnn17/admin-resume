@@ -1,44 +1,27 @@
-# Stage 1: Install dependencies
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+FROM node:18-alpine AS builder
+
 WORKDIR /app/resume-fe
 
-# Install dependencies based on the preferred package manager
-COPY package.json package-lock.json* ./
-RUN npm ci
+COPY package*.json ./
+RUN npm install --force
 
-# Stage 2: Build the application
-FROM node:20-alpine AS builder
-WORKDIR /app/resume-fe
-COPY --from=deps /app/resume-fe/node_modules ./node_modules
 COPY . .
-
 RUN npm run build
 
-# Stage 3: Runner
-FROM node:20-alpine AS runner
+# === STAGE 2: Production ===
+FROM node:18-alpine AS production
+
 WORKDIR /app/resume-fe
 
-ENV NODE_ENV=production
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.ts ./next.config.ts
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY --from=builder /app/resume-fe/public ./public
-
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Automatically leverage output traces to reduce image size
-COPY --from=builder --chown=nextjs:nodejs /app/resume-fe/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/resume-fe/.next/static ./.next/static
-
-USER nextjs
+# Copy env production
+COPY --from=builder /app/resume-fe/.env.production ./.env.production
 
 EXPOSE 6000
-
-ENV PORT=6000
-ENV HOSTNAME="0.0.0.0"
-
-CMD ["node", "server.js"]
+CMD ["npm", "run", "start", "--", "-p", "6000"]

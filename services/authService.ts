@@ -13,7 +13,7 @@ import {
 export const authService = {
   login: async (payload: LoginPayload) => {
     const response = await apiClient.post<ApiResponse<LoginResponseData>>(
-      "/api/auth/login",
+      "/auth/login",
       payload,
     );
     return response.data;
@@ -21,28 +21,25 @@ export const authService = {
 
   getUsers: async (params?: UserListParams) => {
     const response = await apiClient.get<ApiResponse<PaginatedResponse<User>>>(
-      "/api/auth/user",
+      "/auth/user",
       { params },
     );
     return response.data;
   },
 
   getAllUsers: async () => {
-    const response =
-      await apiClient.get<ApiResponse<User[]>>("/api/auth/user/all");
+    const response = await apiClient.get<ApiResponse<User[]>>("/auth/user/all");
     return response.data;
   },
 
   getUserById: async (id: string) => {
-    const response = await apiClient.get<ApiResponse<User>>(
-      `/api/auth/user/${id}`,
-    );
+    const response = await apiClient.get<ApiResponse<User>>(`/auth/user/${id}`);
     return response.data;
   },
 
   createUser: async (payload: CreateUserPayload) => {
     const response = await apiClient.post<ApiResponse<User>>(
-      "/api/auth/user",
+      "/auth/user",
       payload,
     );
     return response.data;
@@ -50,7 +47,7 @@ export const authService = {
 
   updateUser: async (payload: UpdateUserPayload) => {
     const response = await apiClient.put<ApiResponse<User>>(
-      "/api/auth/user",
+      "/auth/user",
       payload,
     );
     return response.data;
@@ -58,7 +55,7 @@ export const authService = {
 
   deleteUser: async (id: string) => {
     const response = await apiClient.delete<ApiResponse<null>>(
-      `/api/auth/user/${id}`,
+      `/auth/user/${id}`,
     );
     return response.data;
   },
